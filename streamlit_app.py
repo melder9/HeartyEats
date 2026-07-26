@@ -242,61 +242,62 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
     st.session_state.messages.append({"role": "user", "content": prompt})
     st.chat_message("user").write(prompt)
 
-    memory_window = [st.session_state.messages[0]] + st.session_state.messages[-5:]
+    # Show loading message while processing
+    with st.spinner("⏳ I'm working on it, please wait..."):
+        memory_window = [st.session_state.messages[0]] + st.session_state.messages[-5:]
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=memory_window,
-        tools=tools,
-        tool_choice="auto"
-    )
-
-    response_message = response.choices[0].message
-
-    if response_message.tool_calls:
-        st.session_state.messages.append(response_message)
-
-        for tool_call in response_message.tool_calls:
-            function_name = tool_call.function.name
-            function_args = json.loads(tool_call.function.arguments)
-
-            # Execute the tool and get result
-            if function_name == "search_heart_healthy_recipes":
-                tool_result = search_heart_healthy_recipes(function_args.get("query_keywords"))
-
-            elif function_name == "generate_plating_image":
-                image_url = generate_plating_image(function_args.get("recipe_name"))
-                if image_url.startswith("http"):
-                    st.image(image_url, caption=f"Plating Concept: {function_args.get('recipe_name')}")
-                tool_result = image_url
-
-            elif function_name == "get_dietary_guidelines":
-                tool_result = get_dietary_guidelines(function_args.get("question"))
-
-            # Add tool result message to conversation history for OpenAI
-            st.session_state.messages.append({
-                "role": "tool",
-                "tool_call_id": tool_call.id,
-                "content": tool_result,
-            })
-
-        # After processing all tool calls, make a follow-up request for the final response
-        # Include the system message, the full conversation with tool calls and results
-        memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
-        
-        final_response = client.chat.completions.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=memory_window,
             tools=tools,
             tool_choice="auto"
         )
 
-        final_message = final_response.choices[0].message
-        content = final_message.content or ""
-        st.session_state.messages.append({"role": "assistant", "content": content})
-        if content:
+        response_message = response.choices[0].message
+
+        if response_message.tool_calls:
+            st.session_state.messages.append(response_message)
+
+            for tool_call in response_message.tool_calls:
+                function_name = tool_call.function.name
+                function_args = json.loads(tool_call.function.arguments)
+
+                # Execute the tool and get result
+                if function_name == "search_heart_healthy_recipes":
+                    tool_result = search_heart_healthy_recipes(function_args.get("query_keywords"))
+
+                elif function_name == "generate_plating_image":
+                    image_url = generate_plating_image(function_args.get("recipe_name"))
+                    if image_url.startswith("http"):
+                        st.image(image_url, caption=f"Plating Concept: {function_args.get('recipe_name')}")
+                    tool_result = image_url
+
+                elif function_name == "get_dietary_guidelines":
+                    tool_result = get_dietary_guidelines(function_args.get("question"))
+
+                # Add tool result message to conversation history for OpenAI
+                st.session_state.messages.append({
+                    "role": "tool",
+                    "tool_call_id": tool_call.id,
+                    "content": tool_result,
+                })
+
+            # After processing all tool calls, make a follow-up request for the final response
+            memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
+            
+            final_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=memory_window,
+                tools=tools,
+                tool_choice="auto"
+            )
+
+            final_message = final_response.choices[0].message
+            content = final_message.content or ""
+            st.session_state.messages.append({"role": "assistant", "content": content})
+            if content:
+                st.chat_message("assistant").write(content)
+        else:
+            content = response_message.content or ""
+            st.session_state.messages.append({"role": "assistant", "content": content})
             st.chat_message("assistant").write(content)
-    else:
-        content = response_message.content or ""
-        st.session_state.messages.append({"role": "assistant", "content": content})
-        st.chat_message("assistant").write(content)
