@@ -217,15 +217,14 @@ tools = [
 ]
 
 # --- STREAMLIT UI & LIMITED MEMORY ---
+
 base_dir = Path(__file__).resolve().parent
 logo_path = base_dir / "HeartyEatsAppLogo.png"
-
-st.write(f"Looking for logo at: {logo_path}")  # temporary debug line
 
 if logo_path.exists():
     st.image(str(logo_path), width=220)
 else:
-    st.warning("Logo file not found. Check filename/case and repo path.")
+    st.warning(f"Logo not found at {logo_path}")
 
 st.title("🫀 Hearty Eats")
 
