@@ -239,11 +239,13 @@ else:
 
 # Start new chat button
 
-if st.button("🆕 Start a new chat", use_container_width=True):
-    st.session_state.messages = [
-        {"role": "system", "content": "You are a heart-healthy culinary assistant. Help users find delicious recipes, check guidelines, and visualize plating concepts."}
-    ]
-    st.rerun()
+with st.sidebar:
+    st.markdown("### Session")
+    if st.button("🆕 Start a new chat", use_container_width=True):
+        st.session_state.messages = [
+            {"role": "system", "content": "You are a heart-healthy culinary assistant. Help users find delicious recipes, check guidelines, and visualize plating concepts."}
+        ]
+        st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
