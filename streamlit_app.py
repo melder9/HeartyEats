@@ -7,6 +7,7 @@ import chromadb
 from openai import OpenAI
 import random
 from pathlib import Path
+import base64
 
 # --- CONFIGURATION & API KEYS ---
 
@@ -109,11 +110,24 @@ def generate_plating_image(recipe_name):
             quality="low",
             n=1,
         )
-        if response and getattr(response, "data", None) and len(response.data) > 0:
-            return getattr(response.data[0], "url", None) or "Image was generated but no URL was returned."
-        return "Image generation returned an empty response."
+
+        if not response or not getattr(response, "data", None) or len(response.data) == 0:
+            return {"type": "error", "value": "Image generation returned an empty response."}
+
+        img = response.data[0]
+
+        # Case 1: URL returned
+        if getattr(img, "url", None):
+            return {"type": "url", "value": img.url}
+
+        # Case 2: base64 returned
+        if getattr(img, "b64_json", None):
+            image_bytes = base64.b64decode(img.b64_json)
+            return {"type": "bytes", "value": image_bytes}
+
+        return {"type": "error", "value": "Image was generated but no displayable payload was returned."}
     except Exception as e:
-        return f"Error generating image: {str(e)}"
+        return {"type": "error", "value": f"Error generating image: {str(e)}"}
 
 def generate_conversational_response(question, context_chunks):
     """Generates a conversational response using an LLM based on the question and retrieved context."""
@@ -282,27 +296,55 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
 
             for tool_call in response_message.tool_calls:
                 function_name = tool_call.function.name
-                function_args = json.loads(tool_call.function.arguments)
+                function_args = json.loads(tool_call.function.arguments or "{}")
+                tool_result = ""
 
-                # Execute the tool and get result
-                if function_name == "search_heart_healthy_recipes":
-                    tool_result = search_heart_healthy_recipes(function_args.get("query_keywords"))
+                try:
+                    # Execute the tool and get result
+                    if function_name == "search_heart_healthy_recipes":
+                        tool_result = search_heart_healthy_recipes(
+                            function_args.get("query_keywords"),
+                            function_args.get("specific_ingredients"),
+                            function_args.get("num_recipes_to_return", 5),
+                        )
 
-                elif function_name == "generate_plating_image":
-                    image_url = generate_plating_image(function_args.get("recipe_name"))
-                    if image_url.startswith("http"):
-                        st.image(image_url, caption=f"Plating Concept: {function_args.get('recipe_name')}")
-                    tool_result = image_url
+                    elif function_name == "generate_plating_image":
+                        image_result = generate_plating_image(function_args.get("recipe_name"))
 
-                elif function_name == "get_dietary_guidelines":
-                    tool_result = get_dietary_guidelines(function_args.get("question"))
+                        if isinstance(image_result, dict):
+                            if image_result["type"] == "url":
+                                st.image(image_result["value"], caption=f"Plating Concept: {function_args.get('recipe_name')}")
+                                tool_result = image_result["value"]
+                            elif image_result["type"] == "bytes":
+                                st.image(image_result["value"], caption=f"Plating Concept: {function_args.get('recipe_name')}")
+                                tool_result = "Image generated and displayed from base64 payload."
+                            else:
+                                st.warning(image_result["value"])
+                                tool_result = image_result["value"]
+                        else:
+                            st.warning("Unexpected image response format.")
+                            tool_result = "Unexpected image response format."
 
-                # Add tool result message to conversation history for OpenAI
-                st.session_state.messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": tool_result,
-                })
+                    elif function_name == "get_dietary_guidelines":
+                        tool_result = get_dietary_guidelines(
+                            function_args.get("question"),
+                            function_args.get("n_results", 3),
+                        )
+
+                    else:
+                        tool_result = f"Unknown tool: {function_name}"
+
+                except Exception as e:
+                    tool_result = f"Tool execution error in {function_name}: {str(e)}"
+
+                finally:
+                    # Add tool result message to conversation history for OpenAI
+                    # CRITICAL: always respond to every tool_call_id
+                    st.session_state.messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": tool_result if isinstance(tool_result, str) else json.dumps(tool_result),
+                    })
 
             # After processing all tool calls, make a follow-up request for the final response
             memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
