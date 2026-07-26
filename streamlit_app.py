@@ -1,4 +1,3 @@
-
 import streamlit as st
 import requests
 import json
@@ -6,6 +5,9 @@ import chromadb
 from openai import OpenAI
 import os
 import random
+
+from dotenv import load_dotenv
+load_dotenv()
 
 # --- CONFIGURATION & API KEYS ---
 # Retrieve API keys from environment variables
