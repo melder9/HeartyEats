@@ -1,22 +1,31 @@
+import os
+from dotenv import load_dotenv
+
+# Load environment variables FIRST
+load_dotenv()
+
+print("DEBUG - OPENAI_API_KEY:", os.environ.get('OPENAI_API_KEY'))
+
 import streamlit as st
 import requests
 import json
 import chromadb
 from openai import OpenAI
-import os
 import random
-
-from dotenv import load_dotenv
-load_dotenv()
 
 # --- CONFIGURATION & API KEYS ---
 # Retrieve API keys from environment variables
 OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
 EDAMAM_APP_ID = os.environ.get('EDAMAM_APP_ID')
 EDAMAM_APP_KEY = os.environ.get('EDAMAM_APP_KEY')
-EDAMAM_ACCOUNT_USER = os.environ.get('EDAMAM_ACCOUNT_USER') # Added EDAMAM_ACCOUNT_USER
+EDAMAM_ACCOUNT_USER = os.environ.get('EDAMAM_ACCOUNT_USER')
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+# Initialize OpenAI client only if API key exists
+if OPENAI_API_KEY:
+    client = OpenAI(api_key=OPENAI_API_KEY)
+else:
+    st.error("❌ Missing OPENAI_API_KEY. Please set it in your .env file.")
+    st.stop()
 
 # --- CHROMADB RAG SETUP ---
 chroma_client = chromadb.Client()
