@@ -222,11 +222,11 @@ base_dir = Path(__file__).resolve().parent
 logo_path = base_dir / "HeartyEatsAppLogo.png"
 
 if logo_path.exists():
-    st.image(str(logo_path), width=220)
+    left, center, right = st.columns([1, 2, 1])
+    with center:
+        st.image(str(logo_path), width=360)
 else:
     st.warning(f"Logo not found at {logo_path}")
-
-st.title("🫀 Hearty Eats")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
