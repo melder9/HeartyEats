@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment variables FIRST
-load_dotenv()
+load_dotenv(".env")
 
 print("DEBUG - OPENAI_API_KEY:", os.environ.get('OPENAI_API_KEY'))
 
