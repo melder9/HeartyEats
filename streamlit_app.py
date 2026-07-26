@@ -104,7 +104,7 @@ def generate_plating_image(recipe_name):
     enhanced_prompt = f"Gourmet food photography of {recipe_name}, beautifully plated on a modern plain white dish, healthy heart meal, cinematic lighting, 8k resolution, macro lens."
     try:
         response = client.images.generate(
-            model="gpt-image-2",
+            model="dall-e-3",
             prompt=enhanced_prompt,
             size="1024x1024",
             quality="standard",
@@ -285,6 +285,7 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
             })
 
         # After processing all tool calls, make a follow-up request for the final response
+        # Include the system message, the full conversation with tool calls and results
         memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
         
         final_response = client.chat.completions.create(
