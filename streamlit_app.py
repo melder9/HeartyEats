@@ -19,6 +19,13 @@ EDAMAM_APP_ID = os.environ.get('EDAMAM_APP_ID')
 EDAMAM_APP_KEY = os.environ.get('EDAMAM_APP_KEY')
 EDAMAM_ACCOUNT_USER = os.environ.get('EDAMAM_ACCOUNT_USER')
 
+OPENAI_API_KEY = os.environ.get('OPENAI_API_KEY')
+
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY is not set. Please add it to your .env file.")
+
+client = OpenAI(api_key=OPENAI_API_KEY)
+
 # --- CHROMADB RAG SETUP ---
 chroma_client = chromadb.Client()
 collection = chroma_client.get_or_create_collection(name="heart_guidelines")
