@@ -1,10 +1,23 @@
 import os
 from dotenv import load_dotenv
 
-# Load environment variables FIRST
-load_dotenv(".env")
+# 1. Force load the .env file
+load_dotenv()
 
-print("DEBUG - OPENAI_API_KEY:", os.environ.get('OPENAI_API_KEY'))
+# 2. Print where Python is currently looking
+print("Current Working Directory:", os.getcwd())
+
+# 3. Print all files in that directory to see if .env is actually there
+print("Files in this directory:", os.listdir())
+
+# 4. Check if the key is actually loaded
+key = os.getenv("OPENAI_API_KEY")
+print(f"API Key Status: {'Found' if key else 'MISSING'}")
+
+if not key:
+    print("❌ Key is missing. Make sure .env is in the Current Working Directory printed above.")
+else:
+    print(f"✅ Key found starting with: {key[:5]}...")
 
 import streamlit as st
 import requests
