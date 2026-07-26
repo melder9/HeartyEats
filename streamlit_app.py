@@ -149,9 +149,70 @@ def get_dietary_guidelines(question, n_results=3):
 
 # --- OPENAI NATIVE TOOL SCHEMAS ---
 tools = [
-    {"type": "function", "function": {"name": "search_heart_healthy_recipes", "description": "Use this to find specific low-fat, low-sodium, heart-healthy recipes based on user ingredients or cravings.", "parameters": {"type": "object", "properties": {"query_keywords": {"type": "string", "description": "The main ingredient or dish name, e.g., 'salmon' or 'soup'"}}, "required": ["query_keywords"]}}},
-    {"type": "function", "function": {"name": "generate_plating_image", "description": "Use this to generate a visual image of the final plated meal.", "parameters": {"type": "object", "properties": {"recipe_name": {"type": "string", "description": "The name of the recipe to visualize."}}, "required": ["recipe_name"]}}},
-    {"type": "function", "function": {"name": "get_dietary_guidelines", "description": "Use this to answer general medical, nutritional, or guideline questions.", "parameters": {"type": "object", "properties": {"question": {"type": "string", "description": "The user's guideline question."}}, "required": ["question"]}}}
+    {
+        "type": "function",
+        "function": {
+            "name": "search_heart_healthy_recipes",
+            "description": "Use this to find specific low-fat, low-sodium, heart-healthy recipes based on user ingredients or cravings.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query_keywords": {
+                        "type": "string",
+                        "description": "Main keywords for the recipe search (e.g., 'salmon', 'quinoa salad')."
+                    },
+                    "specific_ingredients": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional list of specific ingredients to include."
+                    },
+                    "num_recipes_to_return": {
+                        "type": "integer",
+                        "description": "Number of recipes to return (default 5)."
+                    }
+                },
+                "required": ["query_keywords"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_plating_image",
+            "description": "Use this to generate a visual image of the final plated meal.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "recipe_name": {
+                        "type": "string",
+                        "description": "The name of the recipe to visualize."
+                    }
+                },
+                "required": ["recipe_name"]
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_dietary_guidelines",
+            "description": "Use this to answer general medical, nutritional, or guideline questions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "question": {
+                        "type": "string",
+                        "description": "The user's question about dietary guidelines or heart health."
+                    },
+                    "n_results": {
+                        "type": "integer",
+                        "description": "Number of guideline chunks to retrieve (default 3)."
+                    }
+                },
+                "required": ["question"]
+            }
+        }
+    }
 ]
 
 # --- STREAMLIT UI & LIMITED MEMORY ---
