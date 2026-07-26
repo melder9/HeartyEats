@@ -107,7 +107,7 @@ def generate_plating_image(recipe_name):
             model="gpt-image-2",
             prompt=enhanced_prompt,
             size="1024x1024",
-            quality="standard",
+            quality="low",
             n=1,
         )
         return response.data[0].url
