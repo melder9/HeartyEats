@@ -216,6 +216,12 @@ tools = [
 ]
 
 # --- STREAMLIT UI & LIMITED MEMORY ---
+
+# Display app logo (if present)
+logo_path = "HeartyEatsAppLogo.png"
+if os.path.exists(logo_path):
+    st.image(logo_path, width=220)
+
 st.title("🫀 Hearty Eats")
 
 if "messages" not in st.session_state:
