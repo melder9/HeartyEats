@@ -263,19 +263,15 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
             # Execute the tool and get result
             if function_name == "search_heart_healthy_recipes":
                 tool_result = search_heart_healthy_recipes(function_args.get("query_keywords"))
-                st.chat_message("assistant").write(f"**Recipe Search Results:**\n{tool_result}")
 
             elif function_name == "generate_plating_image":
                 image_url = generate_plating_image(function_args.get("recipe_name"))
                 if image_url.startswith("http"):
                     st.image(image_url, caption=f"Plating Concept: {function_args.get('recipe_name')}")
-                else:
-                    st.chat_message("assistant").write(image_url)
                 tool_result = image_url
 
             elif function_name == "get_dietary_guidelines":
                 tool_result = get_dietary_guidelines(function_args.get("question"))
-                st.chat_message("assistant").write(tool_result)
 
             # Add tool result message to conversation history for OpenAI
             st.session_state.messages.append({
