@@ -228,12 +228,22 @@ tools = [
 base_dir = Path(__file__).resolve().parent
 logo_path = base_dir / "HeartyEatsAppLogo.png"
 
+# App logo
+
 if logo_path.exists():
     left, center, right = st.columns([1, 2, 1])
     with center:
         st.image(str(logo_path), width=360)
 else:
     st.warning(f"Logo not found at {logo_path}")
+
+# Start new chat button
+
+if st.button("🆕 Start a new chat", use_container_width=True):
+    st.session_state.messages = [
+        {"role": "system", "content": "You are a heart-healthy culinary assistant. Help users find delicious recipes, check guidelines, and visualize plating concepts."}
+    ]
+    st.rerun()
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
