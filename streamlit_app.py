@@ -1,23 +1,10 @@
 import os
 from dotenv import load_dotenv
 
-# 1. Force load the .env file
-load_dotenv()
+# Load environment variables FIRST
+load_dotenv(".env")
 
-# 2. Print where Python is currently looking
-print("Current Working Directory:", os.getcwd())
-
-# 3. Print all files in that directory to see if .env is actually there
-print("Files in this directory:", os.listdir())
-
-# 4. Check if the key is actually loaded
-key = os.getenv("OPENAI_API_KEY")
-print(f"API Key Status: {'Found' if key else 'MISSING'}")
-
-if not key:
-    print("❌ Key is missing. Make sure .env is in the Current Working Directory printed above.")
-else:
-    print(f"✅ Key found starting with: {key[:5]}...")
+print("DEBUG - OPENAI_API_KEY:", os.environ.get('OPENAI_API_KEY'))
 
 import streamlit as st
 import requests
@@ -273,24 +260,45 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
             function_name = tool_call.function.name
             function_args = json.loads(tool_call.function.arguments)
 
+            # Execute the tool and get result
             if function_name == "search_heart_healthy_recipes":
                 tool_result = search_heart_healthy_recipes(function_args.get("query_keywords"))
                 st.chat_message("assistant").write(f"**Recipe Search Results:**\n{tool_result}")
-                st.session_state.messages.append({"role": "assistant", "content": f"Recipe Search Results: {tool_result}"})
 
             elif function_name == "generate_plating_image":
                 image_url = generate_plating_image(function_args.get("recipe_name"))
                 if image_url.startswith("http"):
                     st.image(image_url, caption=f"Plating Concept: {function_args.get('recipe_name')}")
-                    st.session_state.messages.append({"role": "assistant", "content": f"[Generated Plating Image for {function_args.get('recipe_name')}]"})
                 else:
                     st.chat_message("assistant").write(image_url)
-                    st.session_state.messages.append({"role": "assistant", "content": image_url})
+                tool_result = image_url
 
             elif function_name == "get_dietary_guidelines":
                 tool_result = get_dietary_guidelines(function_args.get("question"))
                 st.chat_message("assistant").write(tool_result)
-                st.session_state.messages.append({"role": "assistant", "content": tool_result})
+
+            # Add tool result message to conversation history for OpenAI
+            st.session_state.messages.append({
+                "role": "tool",
+                "tool_call_id": tool_call.id,
+                "content": tool_result,
+            })
+
+        # After processing all tool calls, make a follow-up request for the final response
+        memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
+        
+        final_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=memory_window,
+            tools=tools,
+            tool_choice="auto"
+        )
+
+        final_message = final_response.choices[0].message
+        content = final_message.content or ""
+        st.session_state.messages.append({"role": "assistant", "content": content})
+        if content:
+            st.chat_message("assistant").write(content)
     else:
         content = response_message.content or ""
         st.session_state.messages.append({"role": "assistant", "content": content})
