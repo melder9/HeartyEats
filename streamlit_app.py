@@ -6,6 +6,7 @@ import json
 import chromadb
 from openai import OpenAI
 import random
+from pathlib import Path
 
 # --- CONFIGURATION & API KEYS ---
 
@@ -216,11 +217,15 @@ tools = [
 ]
 
 # --- STREAMLIT UI & LIMITED MEMORY ---
+base_dir = Path(__file__).resolve().parent
+logo_path = base_dir / "HeartyEatsAppLogo.png"
 
-# Display app logo (if present)
-logo_path = "HeartyEatsAppLogo.png"
-if os.path.exists(logo_path):
-    st.image(logo_path, width=220)
+st.write(f"Looking for logo at: {logo_path}")  # temporary debug line
+
+if logo_path.exists():
+    st.image(str(logo_path), width=220)
+else:
+    st.warning("Logo file not found. Check filename/case and repo path.")
 
 st.title("🫀 Hearty Eats")
 
