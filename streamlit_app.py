@@ -109,7 +109,9 @@ def generate_plating_image(recipe_name):
             quality="low",
             n=1,
         )
-        return response.data[0].url
+        if response and getattr(response, "data", None) and len(response.data) > 0:
+            return getattr(response.data[0], "url", None) or "Image was generated but no URL was returned."
+        return "Image generation returned an empty response."
     except Exception as e:
         return f"Error generating image: {str(e)}"
 
