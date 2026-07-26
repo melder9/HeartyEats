@@ -104,7 +104,7 @@ def generate_plating_image(recipe_name):
     enhanced_prompt = f"Gourmet food photography of {recipe_name}, beautifully plated on a modern plain white dish, healthy heart meal, cinematic lighting, 8k resolution, macro lens."
     try:
         response = client.images.generate(
-            model="dall-e-3",
+            model="gpt-image-2",
             prompt=enhanced_prompt,
             size="1024x1024",
             quality="standard",
