@@ -27,6 +27,9 @@ if not OPENAI_API_KEY:
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+# --- USER-FACING ERROR MESSAGE ---
+APOLOGY_MESSAGE = "Sorry, I am not able to help you with that. Please click on 'Start new chat' to try again."
+
 # --- CHROMADB RAG SETUP ---
 chroma_client = chromadb.Client()
 collection = chroma_client.get_or_create_collection(name="heart_guidelines")
@@ -269,6 +272,8 @@ if "messages" not in st.session_state:
     ]
 
 for msg in st.session_state.messages[1:]:
+    if isinstance(msg, dict) and msg.get("role") == "tool":
+        continue
     if isinstance(msg, dict) and "content" in msg and msg["content"]:
         st.chat_message(msg["role"]).write(msg["content"])
     elif hasattr(msg, "content") and msg.content:
@@ -282,17 +287,24 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
     with st.spinner("⏳ I'm working on it, please wait..."):
         memory_window = [st.session_state.messages[0]] + st.session_state.messages[-5:]
 
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=memory_window,
-            tools=tools,
-            tool_choice="auto"
-        )
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=memory_window,
+                tools=tools,
+                tool_choice="auto"
+            )
+        except Exception as e:
+            print(f"Initial API call error: {e}")
+            st.session_state.messages.append({"role": "assistant", "content": APOLOGY_MESSAGE})
+            st.chat_message("assistant").write(APOLOGY_MESSAGE)
+            st.stop()
 
         response_message = response.choices[0].message
 
         if response_message.tool_calls:
             st.session_state.messages.append(response_message)
+            had_error = False
 
             for tool_call in response_message.tool_calls:
                 function_name = tool_call.function.name
@@ -319,11 +331,13 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
                                 st.image(image_result["value"], caption=f"Plating Concept: {function_args.get('recipe_name')}")
                                 tool_result = "Image generated and displayed from base64 payload."
                             else:
-                                st.warning(image_result["value"])
-                                tool_result = image_result["value"]
+                                print(f"Image generation error: {image_result['value']}")
+                                had_error = True
+                                tool_result = APOLOGY_MESSAGE
                         else:
-                            st.warning("Unexpected image response format.")
-                            tool_result = "Unexpected image response format."
+                            print("Unexpected image response format.")
+                            had_error = True
+                            tool_result = APOLOGY_MESSAGE
 
                     elif function_name == "get_dietary_guidelines":
                         tool_result = get_dietary_guidelines(
@@ -332,10 +346,14 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
                         )
 
                     else:
-                        tool_result = f"Unknown tool: {function_name}"
+                        print(f"Unknown tool called: {function_name}")
+                        had_error = True
+                        tool_result = APOLOGY_MESSAGE
 
                 except Exception as e:
-                    tool_result = f"Tool execution error in {function_name}: {str(e)}"
+                    print(f"Tool execution error in {function_name}: {e}")
+                    had_error = True
+                    tool_result = APOLOGY_MESSAGE
 
                 finally:
                     # Add tool result message to conversation history for OpenAI
@@ -346,21 +364,31 @@ if prompt := st.chat_input("Ask for a recipe, dietary guideline, or plating visu
                         "content": tool_result if isinstance(tool_result, str) else json.dumps(tool_result),
                     })
 
-            # After processing all tool calls, make a follow-up request for the final response
-            memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
-            
-            final_response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=memory_window,
-                tools=tools,
-                tool_choice="auto"
-            )
+            if had_error:
+                st.session_state.messages.append({"role": "assistant", "content": APOLOGY_MESSAGE})
+                st.chat_message("assistant").write(APOLOGY_MESSAGE)
+            else:
+                # After processing all tool calls, make a follow-up request for the final response
+                memory_window = [st.session_state.messages[0]] + st.session_state.messages[-10:]
 
-            final_message = final_response.choices[0].message
-            content = final_message.content or ""
-            st.session_state.messages.append({"role": "assistant", "content": content})
-            if content:
-                st.chat_message("assistant").write(content)
+                try:
+                    final_response = client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=memory_window,
+                        tools=tools,
+                        tool_choice="auto"
+                    )
+                except Exception as e:
+                    print(f"Final API call error: {e}")
+                    st.session_state.messages.append({"role": "assistant", "content": APOLOGY_MESSAGE})
+                    st.chat_message("assistant").write(APOLOGY_MESSAGE)
+                    st.stop()
+
+                final_message = final_response.choices[0].message
+                content = final_message.content or ""
+                st.session_state.messages.append({"role": "assistant", "content": content})
+                if content:
+                    st.chat_message("assistant").write(content)
         else:
             content = response_message.content or ""
             st.session_state.messages.append({"role": "assistant", "content": content})
