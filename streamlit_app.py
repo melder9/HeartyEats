@@ -101,7 +101,7 @@ def search_heart_healthy_recipes(query_keywords, specific_ingredients=None, num_
         return json.dumps({"error": str(e)})
 
 def generate_plating_image(recipe_name):
-    enhanced_prompt = f"Gourmet food photography of {recipe_name}, beautifully plated on a modern plain white dish, healthy heart meal, cinematic lighting, 8k resolution, macro lens."
+    enhanced_prompt = f"Gourmet food photography of {recipe_name}, full plated meal entirely visible, the whole plate in frame, centered, clean overhead or slightly angled view, modern plain white dish, healthy heart meal, cinematic lighting."
     try:
         response = client.images.generate(
             model="gpt-image-2",
