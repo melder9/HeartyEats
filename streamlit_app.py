@@ -62,9 +62,9 @@ def search_heart_healthy_recipes(query_keywords, specific_ingredients=None, num_
         "app_key": EDAMAM_APP_KEY,
         "diet": ["low-fat", "low-sodium"], # Hardcoded dietary restrictions
         "dishType": [
-            "Biscuits and cookies", "Bread", "Cereals", "Condiments and sauces",
+            "Biscuits and cookies", "Bread", "Cereals",
             "Main course", "Pancake", "Pasta", "Pastry", "Pies and tarts",
-            "Pizza", "Salad", "Sandwiches", "Side dish", "Soup", "Starter", "Preps", "Egg", "Preserve"
+            "Pizza", "Salad", "Sandwiches", "Side dish", "Soup", "Starter", "Egg", "Preserve"
         ]
     }
 
