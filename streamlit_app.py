@@ -269,8 +269,9 @@ if "messages" not in st.session_state:
     ]
 
 for msg in st.session_state.messages[1:]:
-    if isinstance(msg, dict) and "content" in msg and msg["content"]:
-        st.chat_message(msg["role"]).write(msg["content"])
+    if isinstance(msg, dict):
+        if msg.get("role") != "tool" and msg.get("content"):
+            st.chat_message(msg["role"]).write(msg["content"])
     elif hasattr(msg, "content") and msg.content:
         st.chat_message(msg.role).write(msg.content)
 
