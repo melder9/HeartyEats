@@ -3,3 +3,4 @@ chromadb
 pypdf
 openai
 requests
+python-dotenv
