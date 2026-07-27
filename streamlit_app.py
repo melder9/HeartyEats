@@ -256,6 +256,28 @@ if logo_path.exists():
 else:
     st.warning(f"Logo not found at {logo_path}")
 
+# Welcome / onboarding copy
+
+st.markdown("""
+## Welcome to Hearty Eats! 👋
+
+We’re your all-in-one culinary assistant, serving up **heart-healthy recipes**, easy **nutrition tips**, and **visual plating inspiration**.
+
+**Ready to dive in?**  
+Type a prompt below to start your healthy eating journey!
+
+### Try one of these to start:
+
+- **Dietary Question:**  
+  *"What are the best heart-healthy alternatives to salt?"*
+
+- **Recipe Search:**  
+  *"Show me a 20-minute, low-sodium dinner recipe."*
+
+- **Visualising Food:**  
+  *"Show me a beautiful way to plate a salmon and quinoa dish."*
+""")
+
 # Start new chat button
 
 with st.sidebar:
