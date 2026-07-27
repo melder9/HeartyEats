@@ -29,7 +29,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 APOLOGY_MESSAGE = "Sorry, I am not able to help you with that. Please click on 'Start new chat' to try again."
 
 # --- CHROMADB RAG SETUP ---
-chroma_client = chromadb.Client()
+chroma_client = chromadb.EphemeralClient()
 collection = chroma_client.get_or_create_collection(name="heart_guidelines")
 # The PDF loading logic needs to run in the main Colab notebook, not inside the Streamlit app
 # For the Streamlit app, we assume the collection is already populated.
